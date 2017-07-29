@@ -3,6 +3,7 @@ import base64
 from datetime import datetime
 import os
 import shutil
+import math
 
 import cv2
 import numpy as np
@@ -13,6 +14,7 @@ from PIL import Image
 from flask import Flask
 from io import BytesIO
 
+from keras.models import model_from_json
 from keras.models import load_model
 import h5py
 from keras import __version__ as keras_version
@@ -45,8 +47,9 @@ class SimplePIController:
 
 
 controller = SimplePIController(0.1, 0.002)
-set_speed = 9
-controller.set_desired(set_speed)
+max_speed = 15
+min_speed = 9
+controller.set_desired(min_speed)
 
 def normalize_mean(x):
     r = x[:,:,0]   
@@ -70,17 +73,23 @@ def telemetry(sid, data):
         image_array = np.asarray(image)
 
         ############### COLOR CORRECTION #######################
-        image_array = cv2.cvtColor(image_array, cv2.COLOR_RGB2GRAY)
+        image_array = image_array[60:140, :, :] # y1:y2, x1:x2
+        image_array = cv2.resize(image_array, (64, 64))
+        image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
         image_array = np.expand_dims(image_array, axis=2)
         image_array = normalize_mean(image_array)
-
+        
         ########################################################
 
         steering_angle = float(model.predict(image_array[None, :, :, :], batch_size=1))
 
-        throttle = controller.update(float(speed))
+        # Kspeed = 1.0 - math.exp(abs(steering_angle * 2.0))
+        # desired_speed = max_speed - abs(max_speed * Kspeed)
+        # desired_speed = min(max(min_speed, desired_speed), max_speed)
+        # controller.set_desired(desired_speed)
 
-        print(steering_angle, throttle)
+        throttle = controller.update(float(speed))
+        # print(steering_angle, throttle)
         send_control(steering_angle, throttle)
 
         # save frame
@@ -126,16 +135,22 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # check that model Keras version is same as local Keras version
-    f = h5py.File(args.model, mode='r')
-    model_version = f.attrs.get('keras_version')
-    keras_version = str(keras_version).encode('utf8')
+    # f = h5py.File(args.model, mode='r')
+    # model_version = f.attrs.get('keras_version')
+    # keras_version = str(keras_version).encode('utf8')
 
-    if model_version != keras_version:
-        print('You are using Keras version ', keras_version,
-              ', but the model was built using ', model_version)
+    # if model_version != keras_version:
+    #     print('You are using Keras version ', keras_version,
+    #           ', but the model was built using ', model_version)
+    # model = load_model(args.model)
 
-    model = load_model(args.model)
-
+    with open("model/p3_model.json", "r") as json_file:
+        loaded_model_json = json_file.read()
+        json_file.close()
+        model = model_from_json(loaded_model_json)
+        model.load_weights("model/p3_model.h5")
+        print("Loaded model from disk")
+    
     if args.image_folder != '':
         print("Creating image folder at {}".format(args.image_folder))
         if not os.path.exists(args.image_folder):
