@@ -75,9 +75,9 @@ def telemetry(sid, data):
         ############### COLOR CORRECTION #######################
         image_array = image_array[60:140, :, :] # y1:y2, x1:x2
         image_array = cv2.resize(image_array, (64, 64))
-        image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
-        image_array = np.expand_dims(image_array, axis=2)
-        image_array = normalize_mean(image_array)
+        # image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
+        # image_array = np.expand_dims(image_array, axis=2)
+        # image_array = normalize_mean(image_array)
         
         ########################################################
 
