@@ -47,15 +47,8 @@ class SimplePIController:
 
 
 controller = SimplePIController(0.1, 0.002)
-max_speed = 15
-min_speed = 9
-controller.set_desired(min_speed)
-
-# def normalize_mean(x):
-#     r = x[:,:,0]   
-#     r_norm = (r - r.mean()) / r.std()
-    
-#     return np.expand_dims(r_norm, axis=3)
+speed = 9
+controller.set_desired(speed)
 
 @sio.on('telemetry')
 def telemetry(sid, data):
@@ -74,12 +67,7 @@ def telemetry(sid, data):
 
         ############### COLOR CORRECTION #######################
         image_array = image_array[60:140, :, :] # y1:y2, x1:x2
-        image_array = cv2.resize(image_array, (128, 64), interpolation=cv2.INTER_AREA)
-        image_array = image_array / 255.0 - 0.5
-
-        # image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
-        # image_array = np.expand_dims(image_array, axis=2)
-        # image_array = normalize_mean(image_array)
+        image_array = cv2.resize(image_array, (200, 66))
         
         ########################################################
 
