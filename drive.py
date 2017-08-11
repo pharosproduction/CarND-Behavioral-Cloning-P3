@@ -67,7 +67,9 @@ def telemetry(sid, data):
 
         ############### COLOR CORRECTION #######################
         image_array = image_array[60:140, :, :] # y1:y2, x1:x2
-        image_array = cv2.resize(image_array, (200, 66))
+        image_array = cv2.GaussianBlur(image_array, (3,3), 0)
+        image_array = cv2.resize(image_array, (200, 66), interpolation = cv2.INTER_AREA)
+        image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2YUV)
         
         ########################################################
 
